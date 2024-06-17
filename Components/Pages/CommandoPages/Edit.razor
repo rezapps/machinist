@@ -1,0 +1,98 @@
+@page "/Commandos/edit"
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Commando</h4>
+<hr />
+@if (Commando is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Commando" OnValidSubmit="UpdateCommando" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Commando.CommandoId" value="@Commando.CommandoId" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Commando.Name" class="form-control" />
+                    <ValidationMessage For="() => Commando.Name" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="desc" class="form-label">Desc:</label>
+                    <InputText id="desc" @bind-Value="Commando.Desc" class="form-control" />
+                    <ValidationMessage For="() => Commando.Desc" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="exetime" class="form-label">ExeTime:</label>
+                    <InputNumber id="exetime" @bind-Value="Commando.ExeTime" class="form-control" />
+                    <ValidationMessage For="() => Commando.ExeTime" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="machineid" class="form-label">MachineId:</label>
+                    <InputNumber id="machineid" @bind-Value="Commando.MachineId" class="form-control" />
+                    <ValidationMessage For="() => Commando.MachineId" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/commandos">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int CommandoId { get; set; }
+
+    [SupplyParameterFromForm]
+    public Commando? Commando { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Commando ??= await DB.Commando.FirstOrDefaultAsync(m => m.CommandoId == CommandoId);
+
+        if (Commando is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+    public async Task UpdateCommando()
+    {
+        DB.Attach(Commando!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!CommandoExists(Commando!.CommandoId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/commandos");
+    }
+
+    bool CommandoExists(int commandoid)
+    {
+        return DB.Commando.Any(e => e.CommandoId == commandoid);
+    }
+}

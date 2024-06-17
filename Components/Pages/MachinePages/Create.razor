@@ -1,0 +1,81 @@
+@page "/machines/create/compid={compid:int}"
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h4>New Machine</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Machine" OnValidSubmit="AddMachine" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label>
+                <InputText id="name" @bind-Value="Machine.Name" class="form-control" />
+                <ValidationMessage For="() => Machine.Name" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="desc" class="form-label">Desc:</label>
+                <InputText id="desc" @bind-Value="Machine.Desc" class="form-control" />
+                <ValidationMessage For="() => Machine.Desc" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="roomnr" class="form-label">RoomNr:</label>
+                <InputText id="roomnr" @bind-Value="Machine.RoomNr" class="form-control" />
+                <ValidationMessage For="() => Machine.RoomNr" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="status" class="form-label">Status:</label>
+                <InputText id="status" @bind-Value="Machine.Status" class="form-control" />
+                <ValidationMessage For="() => Machine.Status" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="companyid" class="form-label">CompanyId:</label>
+                <InputNumber id="companyid" @bind-Value="compid" class="form-control" @bind-Value="compid" />
+                <ValidationMessage For="() => Machine.CompanyId" class="text-danger" />
+            </div>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/machines">Back to List</a>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "compid")]
+    public int compid { get; set; }
+
+    [SupplyParameterFromForm]
+    public Machine Machine { get; set; } = new();
+    public async Task AddMachine()
+    {
+        int machId = DB.Machine.Max(m => m.Id) + 1;
+
+        Machine.CompanyId = compid;
+        Machine.Id = machId;
+        DB.Machine.Add(Machine);
+        await AddDefaultCommands();
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo($"/companies/dashboard?id={compid}");
+    }
+
+    public async Task AddDefaultCommands()
+    {
+        var commands = new List<Commando>
+        {
+            new Commando { Name = "Start", ExeTime = 3, Desc = "Starts Machine", MachineId = Machine.Id },
+            new Commando { Name = "Stop", ExeTime = 1, Desc = "Stops Machine", MachineId = Machine.Id },
+            new Commando { Name = "Pause", ExeTime = 1, Desc = "Pauses Machine", MachineId = Machine.Id },
+            new Commando { Name = "Restart", ExeTime = 2, Desc = "Execution Time", MachineId = Machine.Id }
+        };
+
+        DB.Commando.AddRange(commands);
+        await DB.SaveChangesAsync();
+    }
+}

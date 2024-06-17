@@ -1,0 +1,25 @@
+@page "/commandos"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="commandos/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="DB.Commando">
+    <PropertyColumn Property="commando => commando.Name" />
+    <PropertyColumn Property="commando => commando.Desc" />
+    <PropertyColumn Property="commando => commando.ExeTime" />
+    <PropertyColumn Property="commando => commando.MachineId" />
+
+    <TemplateColumn Context="commando">
+        <a href="@($"commandos/edit?commandoid={commando.CommandoId}")">Edit</a> |
+        <a href="@($"commandos/details?commandoid={commando.CommandoId}")">Details</a> |
+        <a href="@($"commandos/delete?commandoid={commando.CommandoId}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>

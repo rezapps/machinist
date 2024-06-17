@@ -1,0 +1,172 @@
+@page "/companies/dashboard"
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+
+
+<PageTitle>Dashboard</PageTitle>
+
+
+
+<div>
+    <div class="lnks">
+        <a href="@($"/companies")">Return</a>
+        @if (company != null)
+        {
+            <a href="@($"/machines/create/compid={company.Id}")">Add New Machine</a>
+        }
+    </div>
+    <hr />
+    @if (company is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@company.Name</dd>
+            <dt class="col-sm-2">Logo</dt>
+            <dd class="col-sm-10">
+                @if (company.Logo != null)
+                {
+                    <img src="/img/@(company.Logo)" alt="@company.Name" width="70" height="auto">
+                }
+            </dd>
+            <dt class="col-sm-2">Desc</dt>
+            <dd class="col-sm-10">@company.Desc</dd>
+        </dl>
+
+    }
+</div>
+
+<hr />
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Machine Name</th>
+            <th>Room Number</th>
+            <th>Status</th>
+            <th>Last Status</th>
+            <th></th>
+            <th>Commands</th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var machine in companyMachines)
+        {
+            <tr>
+                <td><button class="btn">
+                        @machine.Name
+                </button></td>
+                <td><button class="btn">
+                        @machine.RoomNr
+                </button></td>
+                <td><button class="btn">
+                        @machine.Status
+                </button></td>
+                <td><button class="btn">
+                        @(machine.StatusChanged?.ToString() ?? "")
+                </button></td>
+                @foreach (var cmd in Cmds)
+                {
+                    <td><button class="btn @machine.Status"
+                            @onclick="@(() => RunIt(cmd.Name, cmd.ExeTime, machine.Id))">@cmd.Name
+                    </button></td>
+                }
+                <td>
+                    <a href="@($"machines/edit?id={machine.Id}")" class="btn">Edit</a>
+                </td>
+                <td>
+                    <a href="@($"/commandos/create/machid={machine.Id}")">Add New Machine Commando</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<hr />
+
+@code {
+    Company? company;
+    List<Machine> companyMachines = new List<Machine>();
+    public List<Commando> Cmds { get; set; }
+
+
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        company = await DB.Company.FirstOrDefaultAsync(m => m.Id == Id);
+
+
+        if (company != null)
+        {
+            companyMachines = await DB.Machine
+            .Include(m => m.Commandos)
+            .Where(machine => machine.CompanyId == company.Id)
+            .ToListAsync();
+        }
+
+        foreach (var mach in companyMachines)
+        {
+            Cmds = await DB.Commando.Where(cmd => cmd.MachineId == mach.Id).ToListAsync();
+        }
+
+
+        if (company is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+
+    private async Task RunIt(string cmd, double exeTime, int machId)
+    {
+        try
+        {
+            Machine machine = await DB.Machine.FindAsync(machId);
+            int scnds = (int)(exeTime * 1000);
+
+            if (machine == null)
+            {
+                throw new Exception($"Machine with ID {machId} not found.");
+            }
+            else
+            {
+                if (cmd == "Pause")
+                {
+                    await Task.Delay(scnds);
+                    machine.Status = "Paused";
+                }
+                else if (cmd == "Stop")
+                {
+                    await Task.Delay(scnds);
+                    machine.Status = "Stopped";
+                }
+                else
+                {
+                    await Task.Delay(scnds);
+                    machine.Status = "Running";
+                }
+                machine.StatusChanged = DateTime.Now;
+                await DB.SaveChangesAsync();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating machine status: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,60 @@
+@page "/commandos/create/machid={machid:int}"
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Commando</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Commando" OnValidSubmit="AddCommando" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label> 
+                <InputText id="name" @bind-Value="Commando.Name" class="form-control" /> 
+                <ValidationMessage For="() => Commando.Name" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="desc" class="form-label">Desc:</label> 
+                <InputText id="desc" @bind-Value="Commando.Desc" class="form-control" /> 
+                <ValidationMessage For="() => Commando.Desc" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="exetime" class="form-label">ExeTime:</label> 
+                <InputNumber id="exetime" @bind-Value="Commando.ExeTime" class="form-control" /> 
+                <ValidationMessage For="() => Commando.ExeTime" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="machineid" class="form-label">MachineId:</label> 
+                <InputNumber id="machineid" @bind-Value="@machid" class="form-control" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/commandos">Back to List</a>
+</div>
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "machid")]
+    public int machid { get; set; }
+
+    [SupplyParameterFromForm]
+    public Commando Commando { get; set; } = new();
+    public async Task AddCommando()
+    {
+        Commando.MachineId = machid;
+        DB.Commando.Add(Commando);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo($"/commandos");
+    }
+}

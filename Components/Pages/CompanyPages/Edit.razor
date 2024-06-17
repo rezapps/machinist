@@ -1,0 +1,94 @@
+@page "/companies/edit"
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Company</h4>
+<hr />
+@if (Company is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Company" OnValidSubmit="UpdateCompany" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Company.Id" value="@Company.Id" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Company.Name" class="form-control" />
+                    <ValidationMessage For="() => Company.Name" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="logo" class="form-label">Logo:</label>
+                    <InputText id="logo" @bind-Value="Company.Logo" class="form-control" />
+                    <ValidationMessage For="() => Company.Logo" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="desc" class="form-label">Desc:</label>
+                    <InputText id="desc" @bind-Value="Company.Desc" class="form-control" />
+                    <ValidationMessage For="() => Company.Desc" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/companies">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Company? Company { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Company ??= await DB.Company.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Company is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    public async Task UpdateCompany()
+    {
+        DB.Attach(Company!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!CompanyExists(Company!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/companies");
+    }
+
+    bool CompanyExists(int id)
+    {
+        return DB.Company.Any(e => e.Id == id);
+    }
+}

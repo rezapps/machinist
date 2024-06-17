@@ -1,0 +1,51 @@
+@page "/commandos/details"
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>Commando</h4>
+    <hr />
+    @if (commando is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@commando.Name</dd>
+            <dt class="col-sm-2">Desc</dt>
+            <dd class="col-sm-10">@commando.Desc</dd>
+            <dt class="col-sm-2">ExeTime</dt>
+            <dd class="col-sm-10">@commando.ExeTime</dd>
+            <dt class="col-sm-2">MachineId</dt>
+            <dd class="col-sm-10">@commando.MachineId</dd>
+        </dl>
+        <div>
+            <a href="@($"/commandos/edit?commandoid={commando.CommandoId}")">Edit</a> |
+            <a href="@($"/commandos")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    Commando? commando;
+
+    [SupplyParameterFromQuery]
+    public int CommandoId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        commando = await DB.Commando.FirstOrDefaultAsync(m => m.CommandoId == CommandoId);
+
+        if (commando is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

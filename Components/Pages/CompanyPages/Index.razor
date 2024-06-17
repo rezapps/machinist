@@ -1,0 +1,22 @@
+@page "/companies"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+
+<PageTitle>Index</PageTitle>
+
+<p class="lnks">
+    <a href="companies/create">Add New Company</a>
+</p>
+
+<QuickGrid Class="table" Items="DB.Company">
+    <PropertyColumn Property="company => company.Name" />
+    <TemplateColumn Context="company" Title="Logo">
+        <img src="/img/@(company.Logo)" alt="@company.Name" width="70" height="auto">
+    </TemplateColumn>
+    <PropertyColumn Property="company => company.Desc" />
+
+    <TemplateColumn Context="company">
+        <a href="@($"companies/dashboard?id={company.Id}")">Machines</a>
+    </TemplateColumn>
+</QuickGrid>

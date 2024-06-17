@@ -1,0 +1,63 @@
+@page "/companies/create"
+@inject machinist.Data.MachineContext DB
+@using machinist.Models
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h4>Company</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Company" OnValidSubmit="AddCompany" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label> 
+                <InputText id="name" @bind-Value="Company.Name" class="form-control" /> 
+                <ValidationMessage For="() => Company.Name" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="logo" class="form-label">Logo:</label> 
+                <InputText id="logo" @bind-Value="Company.Logo" class="form-control" /> 
+                <ValidationMessage For="() => Company.Logo" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="address" class="form-label">Address:</label> 
+                <InputText id="address" @bind-Value="Company.Address" class="form-control" /> 
+                <ValidationMessage For="() => Company.Address" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone:</label> 
+                <InputText id="phone" @bind-Value="Company.Phone" class="form-control" /> 
+                <ValidationMessage For="() => Company.Phone" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="desc" class="form-label">Desc:</label> 
+                <InputText id="desc" @bind-Value="Company.Desc" class="form-control" /> 
+                <ValidationMessage For="() => Company.Desc" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/companies">Back to List</a>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+    public Company Company { get; set; } = new();
+
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public async Task AddCompany()
+    {
+        DB.Company.Add(Company);
+        await DB.SaveChangesAsync();
+        NavigationManager.NavigateTo("/companies");
+    }
+}
